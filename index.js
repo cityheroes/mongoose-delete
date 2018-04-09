@@ -84,12 +84,19 @@ module.exports = function (schema, options) {
 
     schema.add({ deleted: createSchemaObject(typeKey, Boolean, { default: false, index: indexFields.deleted }) });
 
+    var deletedAtKey = options.deletedAtKey || 'deletedAt',
+        deletedByKey = options.deletedByKey || 'deletedBy';
+
     if (options.deletedAt === true) {
-        schema.add({ deletedAt: createSchemaObject(typeKey, Date, { index: indexFields.deletedAt }) });
+        var deletedAtProperty = {};
+        deletedAtProperty[deletedAtKey] = createSchemaObject(typeKey, Date, { index: indexFields.deletedAt });
+        schema.add(deletedAtProperty);
     }
 
     if (options.deletedBy === true) {
-        schema.add({ deletedBy: createSchemaObject(typeKey, options.deletedByType || Schema.Types.ObjectId, { index: indexFields.deletedBy }) });
+        var deletedByProperty = {};
+        deletedByProperty[deletedByKey] = createSchemaObject(typeKey, options.deletedByType || Schema.Types.ObjectId, { index: indexFields.deletedBy });
+        schema.add(deletedByProperty);
     }
 
     schema.pre('save', function (next) {
@@ -163,12 +170,12 @@ module.exports = function (schema, options) {
 
         this.deleted = true;
 
-        if (schema.path('deletedAt')) {
-            this.deletedAt = new Date();
+        if (schema.path(deletedAtKey)) {
+            this[deletedAtKey] = new Date();
         }
 
-        if (schema.path('deletedBy')) {
-            this.deletedBy = deletedBy;
+        if (schema.path(deletedByKey)) {
+            this[deletedByKey] = deletedBy;
         }
 
         if (options.validateBeforeDelete === false) {
@@ -193,12 +200,12 @@ module.exports = function (schema, options) {
             deleted: true
         };
 
-        if (schema.path('deletedAt')) {
-            doc.deletedAt = new Date();
+        if (schema.path(deletedAtKey)) {
+            doc[deletedAtKey] = new Date();
         }
 
-        if (schema.path('deletedBy')) {
-            doc.deletedBy = deletedBy;
+        if (schema.path(deletedByKey)) {
+            doc[deletedByKey] = deletedBy;
         }
 
         if (this.updateWithDeleted) {
@@ -210,8 +217,8 @@ module.exports = function (schema, options) {
 
     schema.methods.restore = function (callback) {
         this.deleted = false;
-        this.deletedAt = undefined;
-        this.deletedBy = undefined;
+        this[deletedAtKey] = undefined;
+        this[deletedByKey] = undefined;
         return this.save(callback);
     };
 
@@ -222,10 +229,10 @@ module.exports = function (schema, options) {
         }
 
         var doc = {
-            deleted: false,
-            deletedAt: undefined,
-            deletedBy: undefined
+            deleted: false
         };
+        doc[deletedAtKey] = undefined;
+        doc[deletedByKey] = undefined;
 
         if (this.updateWithDeleted) {
             return this.updateWithDeleted(conditions, doc, { multi: true }, callback);

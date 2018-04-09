@@ -32,5 +32,8 @@
     "chai": "^3.3.0",
     "istanbul": "^0.4.2",
     "mocha": "^2.3.3"
+  },
+  "dependencies": {
+    "mongoose": "^5.0.13"
   }
 }
